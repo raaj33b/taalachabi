@@ -1,0 +1,11 @@
+# never commit an actual exported vault file
+*.taala
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# editor junk
+.vscode/
+*.swp

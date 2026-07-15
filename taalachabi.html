@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAALACHABI · Private Vault</title>
+<style>
+:root{
+  --void:#07060F;
+  --void2:#0d0b18;
+  --gold:#C9954C;
+  --gold-dim:#8a6a3a;
+  --violet:#6B4EFF;
+  --teal:#00C9B1;
+  --bone:#EDE6D6;
+  --bone-dim:#9a927e;
+  --danger:#c9494c;
+  --s1:8px; --s2:13px; --s3:21px; --s4:34px; --s5:55px; --s6:89px;
+  --h1:68px; --h2:42px; --h3:26px; --h4:18px;
+  --serif:Georgia,'Times New Roman',serif;
+  --mono:Consolas,'Courier New',monospace;
+}
+*{box-sizing:border-box;}
+html,body{
+  margin:0;padding:0;height:100%;
+  background:var(--void);
+  color:var(--bone);
+  font-family:var(--mono);
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;
+  opacity:.045;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+::selection{background:var(--violet);color:var(--bone);}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:var(--void2);}
+::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:8px;}
+
+/* ---------- LOCK SCREEN ---------- */
+#lockScreen{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 20%, #14101f 0%, var(--void) 70%);
+  z-index:100;flex-direction:column;text-align:center;padding:var(--s4);
+}
+.title-wrap{margin-bottom:var(--s5);}
+.taala-title{
+  font-family:var(--serif);
+  font-size:var(--h1);
+  letter-spacing:14px;
+  color:var(--gold);
+  text-shadow:0 0 18px rgba(201,149,76,.35), 2px 2px 0 rgba(107,78,255,.25);
+  animation:flicker 6s infinite;
+  margin:0;
+}
+@keyframes flicker{
+  0%,19%,21%,23%,25%,54%,56%,100%{opacity:1;}
+  20%,22%,24%,55%{opacity:.72;}
+}
+.subline{
+  font-family:var(--mono);
+  color:var(--bone-dim);
+  letter-spacing:6px;
+  font-size:12px;
+  margin-top:var(--s2);
+  text-transform:uppercase;
+}
+.divider{
+  width:120px;height:2px;margin:var(--s3) auto;
+  background:linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+#lockForm{
+  display:flex;flex-direction:column;gap:var(--s3);
+  width:340px;max-width:90vw;
+}
+.field-label{
+  font-size:11px;letter-spacing:3px;color:var(--bone-dim);
+  text-transform:uppercase;text-align:left;margin-bottom:-6px;
+}
+input[type=password],input[type=text],input[type=number],select,textarea{
+  background:#12101f;
+  border:1px solid #2a2440;
+  color:var(--bone);
+  padding:14px 16px;
+  font-family:var(--mono);
+  font-size:15px;
+  border-radius:4px;
+  outline:none;
+  transition:border .2s, box-shadow .2s;
+  width:100%;
+}
+input[type=password]:focus,input[type=text]:focus,select:focus,textarea:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 2px rgba(201,149,76,.15);
+}
+.btn{
+  font-family:var(--mono);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  font-size:13px;
+  padding:14px 20px;
+  border-radius:4px;
+  border:1px solid var(--gold);
+  background:transparent;
+  color:var(--gold);
+  cursor:pointer;
+  transition:.18s all;
+}
+.btn:hover{background:var(--gold);color:var(--void);box-shadow:0 0 16px rgba(201,149,76,.4);}
+.btn-solid{background:var(--gold);color:var(--void);}
+.btn-solid:hover{background:var(--bone);border-color:var(--bone);}
+.btn-violet{border-color:var(--violet);color:var(--violet);}
+.btn-violet:hover{background:var(--violet);color:var(--bone);}
+.btn-danger{border-color:var(--danger);color:var(--danger);}
+.btn-danger:hover{background:var(--danger);color:var(--bone);}
+.btn-ghost{border-color:#2a2440;color:var(--bone-dim);}
+.btn-ghost:hover{border-color:var(--bone-dim);color:var(--bone);background:transparent;}
+.btn-sm{padding:8px 12px;font-size:11px;}
+.err-msg{color:var(--danger);font-size:12px;letter-spacing:1px;min-height:16px;}
+.hint{color:var(--bone-dim);font-size:11px;line-height:1.6;letter-spacing:.5px;}
+#lockRow{display:flex;gap:var(--s2);}
+#lockRow .btn{flex:1;}
+.load-drive-row{margin-top:var(--s3);display:flex;flex-direction:column;gap:var(--s2);}
+#fileImportInput{display:none;}
+
+/* ---------- MAIN APP ---------- */
+#app{display:none;min-height:100vh;flex-direction:column;}
+header.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--s3) var(--s4);
+  border-bottom:1px solid #201a34;
+  background:linear-gradient(180deg, #0d0b18, transparent);
+  flex-wrap:wrap;gap:var(--s2);
+}
+.brand{display:flex;align-items:baseline;gap:var(--s2);}
+.brand .mark{
+  font-family:var(--serif);font-size:var(--h3);color:var(--gold);
+  letter-spacing:4px;
+}
+.brand .chapter{font-size:10px;color:var(--bone-dim);letter-spacing:3px;text-transform:uppercase;}
+.topbar-actions{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:center;}
+#autolockBadge{
+  font-size:10px;color:var(--teal);letter-spacing:1px;border:1px solid #114d43;
+  padding:6px 10px;border-radius:20px;
+}
+main{flex:1;padding:var(--s4);max-width:1100px;margin:0 auto;width:100%;}
+
+.toolbar{display:flex;gap:var(--s2);flex-wrap:wrap;margin-bottom:var(--s4);align-items:center;}
+#searchInput{flex:1;min-width:200px;}
+.pill{
+  padding:7px 14px;border:1px solid #2a2440;border-radius:20px;
+  font-size:11px;letter-spacing:1px;color:var(--bone-dim);cursor:pointer;
+  text-transform:uppercase;transition:.15s;
+}
+.pill.active,.pill:hover{border-color:var(--gold);color:var(--gold);}
+
+#entriesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--s3);}
+.card{
+  background:linear-gradient(160deg,#11101d,#0b0a14);
+  border:1px solid #221c38;
+  border-radius:6px;
+  padding:var(--s3);
+  position:relative;
+  transition:.2s;
+}
+.card:hover{border-color:var(--gold-dim);transform:translateY(-2px);}
+.card .cat-tag{
+  position:absolute;top:var(--s2);right:var(--s2);
+  font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:10px;
+  text-transform:uppercase;color:var(--void);font-weight:bold;
+}
+.card h3{margin:0 0 4px;font-family:var(--serif);color:var(--bone);font-size:var(--h4);padding-right:70px;}
+.card .site-url{font-size:11px;color:var(--gold-dim);margin-bottom:var(--s2);word-break:break-all;}
+.card .row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;background:#0c0a16;padding:8px 10px;border-radius:4px;}
+.card .row .val{font-size:13px;letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.card .row .actions{display:flex;gap:4px;}
+.icon-btn{
+  background:none;border:none;color:var(--bone-dim);cursor:pointer;font-size:13px;
+  padding:3px 6px;border-radius:3px;
+}
+.icon-btn:hover{color:var(--gold);background:#1a1530;}
+.card .card-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:var(--s2);}
+.notes-txt{font-size:11px;color:var(--bone-dim);margin-top:6px;font-style:italic;}
+
+#emptyState{text-align:center;padding:var(--s6) var(--s3);color:var(--bone-dim);}
+#emptyState .em-title{font-family:var(--serif);color:var(--gold);font-size:var(--h3);margin-bottom:var(--s2);}
+
+/* ---------- MODAL ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(4,3,9,.82);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;z-index:200;padding:var(--s3);
+}
+.modal-overlay.show{display:flex;}
+.modal-box{
+  background:#100e1c;border:1px solid var(--gold-dim);border-radius:8px;
+  width:480px;max-width:100%;max-height:88vh;overflow-y:auto;
+  padding:var(--s4);
+  box-shadow:0 0 40px rgba(0,0,0,.6), 0 0 0 1px rgba(201,149,76,.08);
+}
+.modal-box h2{font-family:var(--serif);color:var(--gold);margin-top:0;letter-spacing:2px;font-size:var(--h4);}
+.form-grid{display:flex;flex-direction:column;gap:var(--s2);}
+.gen-row{display:flex;gap:6px;align-items:center;}
+.gen-row input{flex:1;}
+.gen-options{display:flex;flex-wrap:wrap;gap:var(--s2);font-size:11px;color:var(--bone-dim);margin-top:4px;}
+.gen-options label{display:flex;align-items:center;gap:5px;}
+#strengthBar{height:4px;border-radius:2px;background:#221c38;overflow:hidden;margin-top:4px;}
+#strengthFill{height:100%;width:0%;transition:.2s;}
+.modal-actions{display:flex;justify-content:flex-end;gap:var(--s2);margin-top:var(--s3);}
+
+/* ---------- SETTINGS DRAWER ---------- */
+#settingsDrawer .modal-box{width:420px;}
+.settings-block{border-top:1px solid #221c38;padding-top:var(--s3);margin-top:var(--s3);}
+.settings-block:first-of-type{border-top:none;margin-top:0;padding-top:0;}
+.settings-block h4{color:var(--violet);font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:0 0 var(--s2);}
+
+footer.foot{
+  text-align:center;padding:var(--s4);color:var(--bone-dim);font-size:10px;
+  letter-spacing:2px;border-top:1px solid #17132688;
+}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--gold);color:var(--void);padding:10px 22px;border-radius:20px;
+  font-size:12px;letter-spacing:1px;z-index:400;opacity:0;transition:.25s;pointer-events:none;
+}
+.toast.show{opacity:1;bottom:34px;}
+@media(max-width:520px){
+  .taala-title{font-size:40px;letter-spacing:8px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ====================== LOCK SCREEN ====================== -->
+<div id="lockScreen">
+  <div class="title-wrap">
+    <p class="subline" id="chapterTag">CHAPTER ONE</p>
+    <h1 class="taala-title">TAALACHABI</h1>
+    <p class="subline">the one true vault</p>
+    <div class="divider"></div>
+  </div>
+
+  <form id="lockForm">
+    <div id="createFields" style="display:none;">
+      <p class="field-label">Set Master Password</p>
+      <input type="password" id="newPass1" placeholder="new master password" autocomplete="new-password">
+      <div style="height:10px;"></div>
+      <p class="field-label">Confirm</p>
+      <input type="password" id="newPass2" placeholder="confirm master password" autocomplete="new-password">
+    </div>
+
+    <div id="unlockFields">
+      <p class="field-label">Master Password</p>
+      <input type="password" id="unlockPass" placeholder="●●●●●●●●●●" autocomplete="current-password">
+    </div>
+
+    <p class="err-msg" id="lockError"></p>
+
+    <div id="lockRow">
+      <button type="submit" class="btn btn-solid" id="lockActionBtn">UNLOCK</button>
+    </div>
+
+    <div class="load-drive-row">
+      <button type="button" class="btn btn-ghost btn-sm" id="loadFromDriveBtn">📁 LOAD VAULT FROM USB / DRIVE</button>
+      <input type="file" id="fileImportInput" accept=".taala,.json">
+      <p class="hint" id="statusHint">No vault found on this browser. Set a master password to create one, or load an existing .taala vault file from your drive.</p>
+    </div>
+  </form>
+</div>
+
+<!-- ====================== MAIN APP ====================== -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">TAALACHABI</span>
+      <span class="chapter">· raajeeb private core</span>
+    </div>
+    <div class="topbar-actions">
+      <span id="autolockBadge">auto-lock 05:00</span>
+      <button class="btn btn-violet btn-sm" id="openSettingsBtn">⚙ SETTINGS</button>
+      <button class="btn btn-danger btn-sm" id="lockNowBtn">🔒 LOCK</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="search site, username, category...">
+      <div id="categoryPills" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      <button class="btn btn-solid btn-sm" id="addEntryBtn">+ NEW ENTRY</button>
+    </div>
+
+    <div id="entriesGrid"></div>
+    <div id="emptyState" style="display:none;">
+      <p class="em-title">THE VAULT IS EMPTY</p>
+      <p class="hint">Add your first credential, or import a CSV export from Chrome / Firefox / Edge.</p>
+    </div>
+  </main>
+
+  <footer class="foot">∴ 13.13.33 · raajeeb@mailum.com · rights reserved mindvault.io</footer>
+</div>
+
+<!-- ====================== ADD/EDIT ENTRY MODAL ====================== -->
+<div class="modal-overlay" id="entryModal">
+  <div class="modal-box">
+    <h2 id="entryModalTitle">NEW ENTRY</h2>
+    <div class="form-grid">
+      <input type="hidden" id="entryId">
+      <p class="field-label">Site / Service Name</p>
+      <input type="text" id="entrySite" placeholder="e.g. Gmail, Facebook, Railway">
+      <p class="field-label">URL</p>
+      <input type="text" id="entryUrl" placeholder="https://...">
+      <p class="field-label">Username / Email</p>
+      <input type="text" id="entryUser" placeholder="username or email">
+      <p class="field-label">Password</p>
+      <div class="gen-row">
+        <input type="text" id="entryPass" placeholder="password">
+        <button type="button" class="icon-btn" id="togglePassView">👁</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="genPassBtn">⚡ GEN</button>
+      </div>
+      <div id="strengthBar"><div id="strengthFill"></div></div>
+      <div class="gen-options">
+        <label><input type="checkbox" id="optLower" checked> a-z</label>
+        <label><input type="checkbox" id="optUpper" checked> A-Z</label>
+        <label><input type="checkbox" id="optNum" checked> 0-9</label>
+        <label><input type="checkbox" id="optSym" checked> #$&</label>
+        <label>len <input type="number" id="genLen" value="18" min="6" max="64" style="width:50px;padding:4px;"></label>
+      </div>
+      <p class="field-label">Category</p>
+      <select id="entryCategory">
+        <option>Personal</option>
+        <option>Email</option>
+        <option>Banking</option>
+        <option>Social</option>
+        <option>Work</option>
+        <option>Raaverse</option>
+        <option>Other</option>
+      </select>
+      <p class="field-label">Notes</p>
+      <textarea id="entryNotes" rows="2" placeholder="optional notes"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelEntryBtn">CANCEL</button>
+      <button class="btn btn-solid" id="saveEntryBtn">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== SETTINGS DRAWER ====================== -->
+<div class="modal-overlay" id="settingsDrawer">
+  <div class="modal-box">
+    <h2>SETTINGS</h2>
+
+    <div class="settings-block">
+      <h4>USB / Drive Sync</h4>
+      <p class="hint">Save your current vault as an encrypted <b>.taala</b> file onto your USB drive. Load it later on any laptop to see the same data.</p>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <button class="btn btn-solid btn-sm" id="exportVaultBtn">⬇ EXPORT .taala TO DRIVE</button>
+        <button class="btn btn-ghost btn-sm" id="importVaultBtn2">📁 LOAD .taala FILE</button>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h4>Import Browser Passwords</h4>
+      <p class="hint">Export CSV from Chrome/Firefox/Edge (Settings → Passwords → Export), then import here.</p>
+      <button class="btn btn-ghost btn-sm" id="importCsvBtn">📥 IMPORT CSV</button>
+      <input type="file" id="csvInput" accept=".csv" style="display:none;">
+    </div>
+
+    <div class="settings-block">
+      <h4>Auto-Lock Timer</h4>
+      <select id="autolockSelect">
+        <option value="60">1 minute</option>
+        <option value="180">3 minutes</option>
+        <option value="300" selected>5 minutes</option>
+        <option value="600">10 minutes</option>
+        <option value="0">Never (not recommended)</option>
+      </select>
+    </div>
+
+    <div class="settings-block">
+      <h4>Change Master Password</h4>
+      <input type="password" id="changePassNew" placeholder="new master password" style="margin-bottom:8px;">
+      <button class="btn btn-violet btn-sm" id="changePassBtn">RE-ENCRYPT VAULT</button>
+    </div>
+
+    <div class="settings-block">
+      <h4>Danger Zone</h4>
+      <button class="btn btn-danger btn-sm" id="wipeVaultBtn">🗑 WIPE ENTIRE VAULT</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="closeSettingsBtn">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   TAALACHABI — offline AES-256-GCM password vault
+   raaj33b production · ∴ 13.13.33
+   No external dependencies. Uses native Web Crypto API.
+========================================================= */
+
+const $ = id => document.getElementById(id);
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+let sessionKey = null;      // CryptoKey, memory-only
+let vault = { entries: [] };
+let currentSalt = null;     // Uint8Array, persisted
+let editingId = null;
+let autolockSeconds = 300;
+let autolockTimer = null;
+let clipboardClearTimer = null;
+let activeCategory = 'All';
+
+const STORAGE_KEY = 'taalachabi_vault_v1';
+const CATS = ['Personal','Email','Banking','Social','Work','Raaverse','Other'];
+const CAT_COLORS = {Personal:'#6B4EFF',Email:'#00C9B1',Banking:'#c9494c',Social:'#C9954C',Work:'#7a8fd6',Raaverse:'#e0b34a',Other:'#8a8a8a'};
+
+/* ---------- base64 helpers ---------- */
+function bufToB64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)));}
+function b64ToBuf(b64){const bin=atob(b64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return arr.buffer;}
+
+/* ---------- key derivation ---------- */
+async function deriveKey(password, saltBuf){
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt:saltBuf, iterations:250000, hash:'SHA-256'},
+    baseKey,
+    {name:'AES-GCM', length:256},
+    false,
+    ['encrypt','decrypt']
+  );
+}
+
+async function encryptVault(vaultObj, key){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plaintext = enc.encode(JSON.stringify(vaultObj));
+  const cipher = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, plaintext);
+  return {iv:bufToB64(iv), data:bufToB64(cipher)};
+}
+
+async function decryptVault(payload, key){
+  const iv = new Uint8Array(b64ToBuf(payload.iv));
+  const plaintext = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, b64ToBuf(payload.data));
+  return JSON.parse(dec.decode(plaintext));
+}
+
+/* ---------- storage record shape ----------
+{ salt:b64, iv:b64, data:b64 }  -> stored in localStorage & exported .taala file
+------------------------------------------- */
+
+function getStoredRecord(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return raw ? JSON.parse(raw) : null;
+}
+function setStoredRecord(rec){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(rec));
+}
+
+async function saveVaultToStorage(){
+  const saltB64 = bufToB64(currentSalt.buffer ? currentSalt.buffer : currentSalt);
+  const payload = await encryptVault(vault, sessionKey);
+  setStoredRecord({salt:saltB64, iv:payload.iv, data:payload.data});
+}
+
+/* ---------- toast ---------- */
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---------- LOCK SCREEN LOGIC ---------- */
+const existingRecord = getStoredRecord();
+if(!existingRecord){
+  $('createFields').style.display='block';
+  $('unlockFields').style.display='none';
+  $('lockActionBtn').textContent = 'CREATE VAULT';
+} else {
+  $('statusHint').textContent = 'Vault found on this browser. Enter your master password to unlock.';
+}
+
+$('lockForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  $('lockError').textContent = '';
+  const rec = getStoredRecord();
+
+  if(!rec){
+    const p1 = $('newPass1').value, p2 = $('newPass2').value;
+    if(p1.length < 4){ $('lockError').textContent='password too short (min 4 chars)'; return; }
+    if(p1 !== p2){ $('lockError').textContent='passwords do not match'; return; }
+    currentSalt = crypto.getRandomValues(new Uint8Array(16));
+    sessionKey = await deriveKey(p1, currentSalt);
+    vault = {entries:[]};
+    await saveVaultToStorage();
+    enterApp();
+    toast('vault created. export a .taala backup to your USB now.');
+    return;
+  }
+
+  const pass = $('unlockPass').value;
+  try{
+    currentSalt = new Uint8Array(b64ToBuf(rec.salt));
+    sessionKey = await deriveKey(pass, currentSalt);
+    vault = await decryptVault(rec, sessionKey);
+    enterApp();
+  }catch(err){
+    $('lockError').textContent = 'wrong password, or corrupted vault.';
+  }
+});
+
+$('loadFromDriveBtn').addEventListener('click', ()=> $('fileImportInput').click());
+$('fileImportInput').addEventListener('change', handleDriveFile);
+
+function handleDriveFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev)=>{
+    try{
+      const rec = JSON.parse(ev.target.result);
+      if(!rec.salt || !rec.iv || !rec.data) throw new Error('bad file');
+      setStoredRecord(rec);
+      $('createFields').style.display='none';
+      $('unlockFields').style.display='block';
+      $('lockActionBtn').textContent='UNLOCK';
+      $('statusHint').textContent = 'Vault file loaded from drive. Enter your master password to unlock.';
+      toast('vault file loaded — now enter your password');
+    }catch(err){
+      $('lockError').textContent = 'invalid .taala file';
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- ENTER APP ---------- */
+function enterApp(){
+  $('lockScreen').style.display='none';
+  $('app').style.display='flex';
+  buildCategoryPills();
+  renderEntries();
+  resetAutolock();
+  ['mousemove','keydown','click','scroll'].forEach(ev=>document.addEventListener(ev, resetAutolock));
+}
+
+function lockApp(){
+  sessionKey = null;
+  vault = {entries:[]};
+  $('app').style.display='none';
+  $('lockScreen').style.display='flex';
+  $('unlockPass').value = '';
+  $('createFields').style.display='none';
+  $('unlockFields').style.display='block';
+  $('lockActionBtn').textContent='UNLOCK';
+  $('lockError').textContent='';
+}
+$('lockNowBtn').addEventListener('click', lockApp);
+
+/* ---------- AUTO-LOCK ---------- */
+function resetAutolock(){
+  clearTimeout(autolockTimer);
+  if(autolockSeconds > 0){
+    autolockTimer = setTimeout(()=>{ lockApp(); toast('auto-locked'); }, autolockSeconds*1000);
+  }
+}
+$('autolockSelect').addEventListener('change', (e)=>{
+  autolockSeconds = parseInt(e.target.value,10);
+  $('autolockBadge').textContent = autolockSeconds ? `auto-lock ${Math.floor(autolockSeconds/60)}:00`.padEnd(0) : 'auto-lock off';
+  resetAutolock();
+});
+
+/* ---------- CATEGORY PILLS ---------- */
+function buildCategoryPills(){
+  const wrap = $('categoryPills');
+  wrap.innerHTML = '';
+  ['All',...CATS].forEach(cat=>{
+    const p = document.createElement('div');
+    p.className = 'pill' + (cat===activeCategory ? ' active' : '');
+    p.textContent = cat;
+    p.onclick = ()=>{ activeCategory = cat; buildCategoryPills(); renderEntries(); };
+    wrap.appendChild(p);
+  });
+}
+
+/* ---------- RENDER ENTRIES ---------- */
+function renderEntries(){
+  const grid = $('entriesGrid');
+  const q = $('searchInput').value.trim().toLowerCase();
+  let list = vault.entries.filter(e=>{
+    const matchCat = activeCategory==='All' || e.category===activeCategory;
+    const matchQ = !q || (e.site+e.username+e.category+e.url).toLowerCase().includes(q);
+    return matchCat && matchQ;
+  }).sort((a,b)=> a.site.localeCompare(b.site));
+
+  grid.innerHTML = '';
+  $('emptyState').style.display = list.length ? 'none' : 'block';
+
+  list.forEach(entry=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    const catColor = CAT_COLORS[entry.category] || '#8a8a8a';
+    card.innerHTML = `
+      <span class="cat-tag" style="background:${catColor}">${entry.category}</span>
+      <h3>${escapeHtml(entry.site)}</h3>
+      ${entry.url ? `<div class="site-url">${escapeHtml(entry.url)}</div>` : ''}
+      <div class="row">
+        <span class="val">${escapeHtml(entry.username || '—')}</span>
+        <div class="actions"><button class="icon-btn copy-user" title="copy username">⧉</button></div>
+      </div>
+      <div class="row">
+        <span class="val pass-mask" data-pass="${escapeHtml(entry.password||'')}">••••••••••••</span>
+        <div class="actions">
+          <button class="icon-btn show-pass" title="show/hide">👁</button>
+          <button class="icon-btn copy-pass" title="copy password">⧉</button>
+        </div>
+      </div>
+      ${entry.notes ? `<div class="notes-txt">${escapeHtml(entry.notes)}</div>` : ''}
+      <div class="card-footer">
+        <button class="icon-btn edit-entry" title="edit">✎ edit</button>
+        <button class="icon-btn del-entry" title="delete" style="color:var(--danger);">✕ delete</button>
+      </div>
+    `;
+    card.querySelector('.copy-user').onclick = ()=>copyToClipboard(entry.username, 'username copied');
+    card.querySelector('.copy-pass').onclick = ()=>copyToClipboard(entry.password, 'password copied — clears in 20s');
+    card.querySelector('.show-pass').onclick = (ev)=>{
+      const span = card.querySelector('.pass-mask');
+      if(span.textContent.includes('•')) span.textContent = entry.password;
+      else span.textContent = '••••••••••••';
+    };
+    card.querySelector('.edit-entry').onclick = ()=>openEntryModal(entry.id);
+    card.querySelector('.del-entry').onclick = ()=>deleteEntry(entry.id);
+    grid.appendChild(card);
+  });
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function copyToClipboard(text, msg){
+  navigator.clipboard.writeText(text||'').then(()=>{
+    toast(msg);
+    clearTimeout(clipboardClearTimer);
+    clipboardClearTimer = setTimeout(()=>{
+      navigator.clipboard.writeText('').catch(()=>{});
+    }, 20000);
+  });
+}
+
+$('searchInput').addEventListener('input', renderEntries);
+
+/* ---------- ADD / EDIT MODAL ---------- */
+$('addEntryBtn').addEventListener('click', ()=>openEntryModal(null));
+$('cancelEntryBtn').addEventListener('click', ()=>closeModal('entryModal'));
+
+function openEntryModal(id){
+  editingId = id;
+  const modal = $('entryModal');
+  if(id){
+    const e = vault.entries.find(x=>x.id===id);
+    $('entryModalTitle').textContent = 'EDIT ENTRY';
+    $('entryId').value = e.id;
+    $('entrySite').value = e.site;
+    $('entryUrl').value = e.url||'';
+    $('entryUser').value = e.username||'';
+    $('entryPass').value = e.password||'';
+    $('entryCategory').value = e.category||'Other';
+    $('entryNotes').value = e.notes||'';
+  } else {
+    $('entryModalTitle').textContent = 'NEW ENTRY';
+    ['entryId','entrySite','entryUrl','entryUser','entryPass','entryNotes'].forEach(id2=>$(id2).value='');
+    $('entryCategory').value = 'Personal';
+  }
+  updateStrength();
+  modal.classList.add('show');
+}
+function closeModal(id){ $(id).classList.remove('show'); }
+
+$('togglePassView').addEventListener('click', ()=>{
+  const inp = $('entryPass');
+  inp.type = inp.type==='password' ? 'text' : 'password';
+});
+$('entryPass').type = 'text';
+
+$('saveEntryBtn').addEventListener('click', async ()=>{
+  const site = $('entrySite').value.trim();
+  if(!site){ toast('site name required'); return; }
+  const data = {
+    id: $('entryId').value || 'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+    site, url:$('entryUrl').value.trim(), username:$('entryUser').value.trim(),
+    password:$('entryPass').value, category:$('entryCategory').value,
+    notes:$('entryNotes').value.trim(), updatedAt: Date.now()
+  };
+  const idx = vault.entries.findIndex(e=>e.id===data.id);
+  if(idx>-1) vault.entries[idx]=data; else vault.entries.push(data);
+  await saveVaultToStorage();
+  renderEntries();
+  closeModal('entryModal');
+  toast('saved. remember to export to your USB drive.');
+});
+
+function deleteEntry(id){
+  if(!confirm('Delete this entry permanently?')) return;
+  vault.entries = vault.entries.filter(e=>e.id!==id);
+  saveVaultToStorage();
+  renderEntries();
+  toast('entry deleted');
+}
+
+/* ---------- PASSWORD GENERATOR ---------- */
+function genPassword(){
+  const len = parseInt($('genLen').value,10)||18;
+  let chars = '';
+  if($('optLower').checked) chars += 'abcdefghijkmnopqrstuvwxyz';
+  if($('optUpper').checked) chars += 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  if($('optNum').checked) chars += '23456789';
+  if($('optSym').checked) chars += '!@#$%^&*-_+=?';
+  if(!chars) chars = 'abcdefghijklmnopqrstuvwxyz';
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  let out = '';
+  for(let i=0;i<len;i++) out += chars[arr[i]%chars.length];
+  return out;
+}
+$('genPassBtn').addEventListener('click', ()=>{
+  $('entryPass').value = genPassword();
+  updateStrength();
+});
+$('entryPass').addEventListener('input', updateStrength);
+function updateStrength(){
+  const v = $('entryPass').value;
+  let score = 0;
+  if(v.length>=8) score+=25;
+  if(v.length>=14) score+=25;
+  if(/[A-Z]/.test(v)&&/[a-z]/.test(v)) score+=20;
+  if(/[0-9]/.test(v)) score+=15;
+  if(/[^A-Za-z0-9]/.test(v)) score+=15;
+  const fill = $('strengthFill');
+  fill.style.width = score+'%';
+  fill.style.background = score<40 ? '#c9494c' : score<70 ? '#C9954C' : '#00C9B1';
+}
+
+/* ---------- SETTINGS ---------- */
+$('openSettingsBtn').addEventListener('click', ()=>$('settingsDrawer').classList.add('show'));
+$('closeSettingsBtn').addEventListener('click', ()=>closeModal('settingsDrawer'));
+
+$('exportVaultBtn').addEventListener('click', async ()=>{
+  const rec = getStoredRecord();
+  const blob = new Blob([JSON.stringify(rec)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'taalachabi_vault.taala';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('exported — save this file onto your USB drive');
+});
+
+$('importVaultBtn2').addEventListener('click', ()=>$('fileImportInput').click());
+
+$('importCsvBtn').addEventListener('click', ()=>$('csvInput').click());
+$('csvInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev)=>{
+    const lines = ev.target.result.split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length<2){ toast('empty CSV'); return; }
+    const header = lines[0].toLowerCase().split(',');
+    const idxName = header.findIndex(h=>h.includes('name')||h.includes('title'));
+    const idxUrl = header.findIndex(h=>h.includes('url'));
+    const idxUser = header.findIndex(h=>h.includes('user')||h.includes('login'));
+    const idxPass = header.findIndex(h=>h.includes('pass'));
+    let count=0;
+    for(let i=1;i<lines.length;i++){
+      const cols = parseCsvLine(lines[i]);
+      if(!cols.length) continue;
+      vault.entries.push({
+        id:'e_'+Date.now()+'_'+i,
+        site: cols[idxName]||cols[idxUrl]||'Imported Entry',
+        url: cols[idxUrl]||'',
+        username: cols[idxUser]||'',
+        password: cols[idxPass]||'',
+        category:'Other',
+        notes:'imported from CSV',
+        updatedAt: Date.now()
+      });
+      count++;
+    }
+    await saveVaultToStorage();
+    renderEntries();
+    toast(`${count} entries imported`);
+  };
+  reader.readAsText(file);
+});
+function parseCsvLine(line){
+  const out=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c=='"'){ inQ=!inQ; continue; }
+    if(c==',' && !inQ){ out.push(cur); cur=''; continue; }
+    cur+=c;
+  }
+  out.push(cur);
+  return out;
+}
+
+$('changePassBtn').addEventListener('click', async ()=>{
+  const np = $('changePassNew').value;
+  if(np.length<4){ toast('too short'); return; }
+  currentSalt = crypto.getRandomValues(new Uint8Array(16));
+  sessionKey = await deriveKey(np, currentSalt);
+  await saveVaultToStorage();
+  $('changePassNew').value='';
+  toast('master password changed — export a fresh .taala backup now');
+});
+
+$('wipeVaultBtn').addEventListener('click', ()=>{
+  if(!confirm('This deletes ALL entries permanently. Continue?')) return;
+  vault = {entries:[]};
+  saveVaultToStorage();
+  renderEntries();
+  toast('vault wiped');
+});
+
+/* click outside modal to close */
+document.querySelectorAll('.modal-overlay').forEach(ov=>{
+  ov.addEventListener('click',(e)=>{ if(e.target===ov) ov.classList.remove('show'); });
+});
+</script>
+</body>
+</html>
